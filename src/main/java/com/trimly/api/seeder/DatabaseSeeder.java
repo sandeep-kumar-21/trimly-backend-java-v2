@@ -19,15 +19,20 @@ import java.util.*;
 /**
  * Native Java Database Seeder for Trimly.
  * 
- * Automatically populates a complete, balanced test dataset covering all features:
- * - Configurable user credentials via application.properties (seed.user.email & seed.user.password)
+ * Automatically populates a complete, balanced test dataset covering all
+ * features:
+ * - Configurable user credentials via application.properties (seed.user.email &
+ * seed.user.password)
  * - Multi-channel Marketing Campaigns
- * - Short Links (Custom aliases, password protection, expiration, tags, UTM tracking)
- * - Designer Styled QR Codes (Classy, Extra-Rounded, Dots, Rounded, Rose, Classic)
- * - Rich Analytics Clicks (142 clicks across 14 days, geolocations, devices, OS, browsers, referrers)
+ * - Short Links (Custom aliases, password protection, expiration, tags, UTM
+ * tracking)
+ * - Designer Styled QR Codes (Classy, Extra-Rounded, Dots, Rounded, Rose,
+ * Classic)
+ * - Rich Analytics Clicks (142 clicks across 14 days, geolocations, devices,
+ * OS, browsers, referrers)
  * 
  * Trigger manually via:
- *   .\mvnw.cmd spring-boot:run -Dspring-boot.run.arguments="--seed"
+ * .\mvnw.cmd spring-boot:run -Dspring-boot.run.arguments="--seed"
  */
 @Slf4j
 @Component
@@ -43,13 +48,13 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final JdbcTemplate jdbcTemplate;
     private final Environment environment;
 
-    @Value("${seed.user.email:sk21@gmail.com}")
+    @Value("${seed.user.email:demo@trimly.com}")
     private String seedEmail;
 
-    @Value("${seed.user.password:Trimly@341}")
+    @Value("${seed.user.password:DemoPassword@123}")
     private String seedPassword;
 
-    @Value("${seed.user.name:Sandeep Kumar}")
+    @Value("${seed.user.name:Demo User}")
     private String seedName;
 
     @Override
@@ -132,7 +137,8 @@ public class DatabaseSeeder implements CommandLineRunner {
                 Campaign.builder()
                         .userId(userId)
                         .name("Summer Launch & Growth 2026")
-                        .description("Omnichannel marketing push for summer promotional offers, creator partnerships, and direct consumer engagement.")
+                        .description(
+                                "Omnichannel marketing push for summer promotional offers, creator partnerships, and direct consumer engagement.")
                         .channels(new ArrayList<>(List.of("social", "email", "paid", "influencer")))
                         .build(),
                 Campaign.builder()
@@ -144,7 +150,8 @@ public class DatabaseSeeder implements CommandLineRunner {
                 Campaign.builder()
                         .userId(userId)
                         .name("Q4 Enterprise Product Launch")
-                        .description("High-touch B2B enterprise outreach for sales acceleration and executive product webinars.")
+                        .description(
+                                "High-touch B2B enterprise outreach for sales acceleration and executive product webinars.")
                         .channels(new ArrayList<>(List.of("email", "paid", "social", "sms")))
                         .build(),
                 Campaign.builder()
@@ -152,8 +159,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                         .name("Black Friday 2025 Retrospective")
                         .description("Archived seasonal promotional flash sale campaign.")
                         .channels(new ArrayList<>(List.of("email", "social", "sms")))
-                        .build()
-        );
+                        .build());
 
         for (Campaign c : campaignList) {
             Campaign saved = campaignRepository.save(c);
@@ -295,16 +301,18 @@ public class DatabaseSeeder implements CommandLineRunner {
                         .tags(new ArrayList<>(List.of("devops", "cloud")))
                         .isCustomAlias(false)
                         .visibleAsLink(true)
-                        .build()
-        );
+                        .build());
 
         Map<String, Url> urlMap = new LinkedHashMap<>();
         for (Url url : linkList) {
             Url saved = urlRepository.save(url);
             urlMap.put(saved.getShortCode(), saved);
             String passInfo = saved.getPasswordHash() != null ? " [🔒 Password: Vault@2026]" : "";
-            String expInfo = saved.getExpiresAt() != null ? " [⏳ Expires: " + saved.getExpiresAt().toString().substring(0, 10) + "]" : "";
-            System.out.println("   ✓ Created Link: /" + saved.getShortCode() + " -> \"" + saved.getTitle() + "\"" + passInfo + expInfo);
+            String expInfo = saved.getExpiresAt() != null
+                    ? " [⏳ Expires: " + saved.getExpiresAt().toString().substring(0, 10) + "]"
+                    : "";
+            System.out.println("   ✓ Created Link: /" + saved.getShortCode() + " -> \"" + saved.getTitle() + "\""
+                    + passInfo + expInfo);
         }
 
         return urlMap;
@@ -313,16 +321,23 @@ public class DatabaseSeeder implements CommandLineRunner {
     private void seedQrCodes(Long userId, Map<String, Url> urls) {
         System.out.println("\n🎨 Step 5: Seeding Designer QR Codes...");
 
-        record QrDef(String shortCode, String dotsStyle, String cornersStyle, String cornersDotStyle, String dotsColor, String bgColor, String centerText, String label) {}
+        record QrDef(String shortCode, String dotsStyle, String cornersStyle, String cornersDotStyle, String dotsColor,
+                String bgColor, String centerText, String label) {
+        }
 
         List<QrDef> qrDefs = List.of(
-                new QrDef("trimly-docs", "classy", "extra-rounded", "dot", "#1D4ED8", "#FFFFFF", "TRIMLY", "Classy Concentric (Navy / Text Center)"),
-                new QrDef("summer-sale", "extra-rounded", "extra-rounded", "square", "#059669", "#F0FDF4", "SALE", "Extra-Rounded Modern (Emerald / Soft Mint)"),
-                new QrDef("github-repo", "dots", "dot", "dot", "#7C3AED", "#FAF5FF", "GIT", "Dots Geometric (Purple / Circular Corners)"),
-                new QrDef("pricing-tiers", "rounded", "square", "square", "#D97706", "#FFFBEB", "PRO", "Rounded Grid (Amber / Classic Corners)"),
-                new QrDef("mobile-app", "classy-rounded", "extra-rounded", "dot", "#E11D48", "#FFF1F2", "APP", "Classy-Rounded Elegant (Rose / Dot Corner)"),
-                new QrDef("youtube-demo", "square", "square", "square", "#0F172A", "#FFFFFF", null, "Monochrome Standard (Slate / Classic)")
-        );
+                new QrDef("trimly-docs", "classy", "extra-rounded", "dot", "#1D4ED8", "#FFFFFF", "TRIMLY",
+                        "Classy Concentric (Navy / Text Center)"),
+                new QrDef("summer-sale", "extra-rounded", "extra-rounded", "square", "#059669", "#F0FDF4", "SALE",
+                        "Extra-Rounded Modern (Emerald / Soft Mint)"),
+                new QrDef("github-repo", "dots", "dot", "dot", "#7C3AED", "#FAF5FF", "GIT",
+                        "Dots Geometric (Purple / Circular Corners)"),
+                new QrDef("pricing-tiers", "rounded", "square", "square", "#D97706", "#FFFBEB", "PRO",
+                        "Rounded Grid (Amber / Classic Corners)"),
+                new QrDef("mobile-app", "classy-rounded", "extra-rounded", "dot", "#E11D48", "#FFF1F2", "APP",
+                        "Classy-Rounded Elegant (Rose / Dot Corner)"),
+                new QrDef("youtube-demo", "square", "square", "square", "#0F172A", "#FFFFFF", null,
+                        "Monochrome Standard (Slate / Classic)"));
 
         for (QrDef q : qrDefs) {
             QrCode qr = QrCode.builder()
@@ -350,7 +365,8 @@ public class DatabaseSeeder implements CommandLineRunner {
     private void seedAnalyticsClicks(Long userId, Map<String, Campaign> campaigns, Map<String, Url> urls) {
         System.out.println("\n📊 Step 6: Seeding Rich Analytics & Click Telemetry (142 Clicks)...");
 
-        record GeoItem(String country, String city, String region, int weight) {}
+        record GeoItem(String country, String city, String region, int weight) {
+        }
         List<GeoItem> geoPool = List.of(
                 new GeoItem("US", "San Francisco", "California", 22),
                 new GeoItem("US", "New York", "New York", 18),
@@ -364,10 +380,10 @@ public class DatabaseSeeder implements CommandLineRunner {
                 new GeoItem("US", "Seattle", "Washington", 5),
                 new GeoItem("JP", "Tokyo", "Kanto", 4),
                 new GeoItem("IN", "Delhi", "Delhi", 4),
-                new GeoItem("AU", "Sydney", "New South Wales", 2)
-        );
+                new GeoItem("AU", "Sydney", "New South Wales", 2));
 
-        record DeviceItem(String deviceType, String os, String browser, int weight) {}
+        record DeviceItem(String deviceType, String os, String browser, int weight) {
+        }
         List<DeviceItem> devicePool = List.of(
                 new DeviceItem("Desktop", "macOS", "Chrome", 36),
                 new DeviceItem("Desktop", "Windows", "Chrome", 24),
@@ -376,10 +392,10 @@ public class DatabaseSeeder implements CommandLineRunner {
                 new DeviceItem("Desktop", "macOS", "Safari", 12),
                 new DeviceItem("Desktop", "Windows", "Edge", 10),
                 new DeviceItem("Tablet", "iOS", "Safari", 8),
-                new DeviceItem("Desktop", "Linux", "Firefox", 8)
-        );
+                new DeviceItem("Desktop", "Linux", "Firefox", 8));
 
-        record RefItem(String referrer, String utmSource, String utmMedium, int weight) {}
+        record RefItem(String referrer, String utmSource, String utmMedium, int weight) {
+        }
         List<RefItem> refPool = List.of(
                 new RefItem("https://www.google.com", "google", "organic", 38),
                 new RefItem("https://twitter.com", "twitter", "social", 28),
@@ -387,14 +403,14 @@ public class DatabaseSeeder implements CommandLineRunner {
                 new RefItem("", "direct", "none", 20),
                 new RefItem("https://github.com", "github", "referral", 14),
                 new RefItem("https://www.reddit.com", "reddit", "community", 10),
-                new RefItem("https://www.youtube.com", "youtube", "video", 8)
-        );
+                new RefItem("https://www.youtube.com", "youtube", "video", 8));
 
         Campaign summerCamp = campaigns.get("Summer Launch & Growth 2026");
         Campaign devCamp = campaigns.get("Developer Community Outreach");
         Campaign q4Camp = campaigns.get("Q4 Enterprise Product Launch");
 
-        record LinkWeight(String code, boolean isQr, Long campId, int weight) {}
+        record LinkWeight(String code, boolean isQr, Long campId, int weight) {
+        }
         List<LinkWeight> linkPool = List.of(
                 new LinkWeight("summer-sale", false, summerCamp != null ? summerCamp.getId() : null, 34),
                 new LinkWeight("trimly-docs", true, devCamp != null ? devCamp.getId() : null, 28),
@@ -403,8 +419,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 new LinkWeight("github-repo", false, devCamp != null ? devCamp.getId() : null, 14),
                 new LinkWeight("secret-vault", false, null, 10),
                 new LinkWeight("youtube-demo", true, summerCamp != null ? summerCamp.getId() : null, 8),
-                new LinkWeight("live-webinar", false, q4Camp != null ? q4Camp.getId() : null, 6)
-        );
+                new LinkWeight("live-webinar", false, q4Camp != null ? q4Camp.getId() : null, 6));
 
         Random random = new Random(42); // Deterministic seed
         List<Click> clickList = new ArrayList<>(142);
@@ -422,7 +437,8 @@ public class DatabaseSeeder implements CommandLineRunner {
             long dayOffset = (long) (skew * 14);
             long hourOffset = random.nextInt(24);
             long minOffset = random.nextInt(60);
-            Instant timestamp = Instant.ofEpochMilli(nowMillis - (dayOffset * 86400000L + hourOffset * 3600000L + minOffset * 60000L));
+            Instant timestamp = Instant
+                    .ofEpochMilli(nowMillis - (dayOffset * 86400000L + hourOffset * 3600000L + minOffset * 60000L));
 
             // 68 unique visitors
             int visitorNum = (i % 68) + 1;
@@ -503,7 +519,8 @@ public class DatabaseSeeder implements CommandLineRunner {
         int r = random.nextInt(totalWeight);
         for (T item : list) {
             int w = getWeight(item);
-            if (r < w) return item;
+            if (r < w)
+                return item;
             r -= w;
         }
         return list.get(0);

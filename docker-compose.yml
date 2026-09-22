@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: trimly-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: trimly_user
+      POSTGRES_PASSWORD: trimly_password
+      POSTGRES_DB: trimly_db
+      TZ: Asia/Kolkata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trimly_user -d trimly_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: trimly-redis
+    restart: always
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    name: trimly_postgres_data
+  redis_data:
+    name: trimly_redis_data

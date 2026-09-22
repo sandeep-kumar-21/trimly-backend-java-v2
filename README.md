@@ -57,11 +57,14 @@
 - [Complete Project Directory Layout](#complete-project-directory-layout)
 - [Getting Started and Local Development](#getting-started-and-local-development)
   - [Prerequisites](#prerequisites)
-  - [Infrastructure Setup (Docker Compose)](#infrastructure-setup-docker-compose)
-  - [Configuration (application.properties)](#configuration-applicationproperties)
-  - [Running the Backend](#running-the-backend)
-  - [Automated Database Seeder](#automated-database-seeder)
-  - [Running the Test Suite and Code Coverage](#running-the-test-suite-and-code-coverage)
+  - [Step 1: Clone the Repository](#step-1-clone-the-repository)
+  - [Step 2: Launch Containerized Infrastructure (Docker Compose)](#step-2-launch-containerized-infrastructure-docker-compose)
+  - [Step 3: Configuration (application.properties)](#step-3-configuration-applicationproperties)
+  - [Step 4: Build and Launch the Spring Boot Backend](#step-4-build-and-launch-the-spring-boot-backend)
+  - [Step 5: Seed Automated Dataset (Analytics, Links, QR Codes)](#step-5-seed-automated-dataset-analytics-links-qr-codes)
+  - [Step 6: Verify Service Health and OpenAPI Documentation](#step-6-verify-service-health-and-openapi-documentation)
+  - [Step 7: Run Automated Test Suite and Code Coverage](#step-7-run-automated-test-suite-and-code-coverage)
+  - [Step 8: Connect with Frontend (Next.js)](#step-8-connect-with-frontend-nextjs)
 - [API Documentation (Swagger UI and OpenAPI 3)](#api-documentation-swagger-ui-and-openapi-3)
 - [Contributing and License](#contributing-and-license)
 - [Author and Contact](#author-and-contact)
@@ -750,6 +753,7 @@ trimly-backend-java-v2/
 ├── pom.xml                                         # Maven dependency and build configuration
 ├── seed.bat                                        # One-click Windows batch database seeder
 ├── seed.ps1                                        # One-click PowerShell database seeder
+├── seed.sh                                         # One-click Linux / macOS database seeder
 └── README.md                                       # Comprehensive project documentation
 ```
 
@@ -757,32 +761,56 @@ trimly-backend-java-v2/
 
 ## Getting Started and Local Development
 
+Follow this step-by-step starter workflow to clone, configure, launch, seed, and verify the Trimly backend locally.
+
 ### Prerequisites
 
-- **Java Development Kit**: JDK 25 LTS (or JDK 21+)
-- **Build Tool**: Maven 3.9+ (or use the included `./mvnw`)
-- **Container Engine**: Docker & Docker Compose (for PostgreSQL 16 and Redis 7)
+Before beginning, ensure your local development environment has the following software installed:
 
-### Infrastructure Setup (Docker Compose)
+- **Java Development Kit**: JDK 25 LTS installed (compatible with JDK 21+). Verify with `java -version`.
+- **Build Tool**: Apache Maven 3.9+ (or use the included executable wrapper `./mvnw` / `mvnw.cmd`).
+- **Container Engine**: Docker Desktop or Docker Engine with Docker Compose v2+. Verify with `docker compose version`.
+- **Git**: Version 2.30+.
 
-Start the PostgreSQL 16 database and Redis 7 cache in detached mode:
+---
+
+### Step 1: Clone the Repository
+
+Clone the repository to your local workspace and navigate into the project directory:
+
+```bash
+git clone https://github.com/sandeep-kumar-21/trimly-backend-java-v2.git
+cd trimly-backend-java-v2
+```
+
+---
+
+### Step 2: Launch Containerized Infrastructure (Docker Compose)
+
+Trimly requires PostgreSQL 16 (relational data store) and Redis 7 Alpine (cache-aside and Pub/Sub streaming). Start both services in detached mode using Docker Compose:
 
 ```bash
 docker compose up -d
 ```
 
-Verify that the containers are healthy and running:
+Verify that both containers are running and healthy:
 
 ```bash
 docker ps
 ```
 
-- **PostgreSQL 16**: Port `5432` (`trimly_db`)
-- **Redis 7 Alpine**: Port `6379`
+Expected active services:
 
-### Configuration (application.properties)
+| Container Name | Service Image | Port Mapping | Health Role |
+| :--- | :--- | :--- | :--- |
+| `trimly-postgres` | `postgres:16` | `5432:5432` | Relational tables (`urls`, `clicks`, `qrcodes`, `campaigns`, `users`) |
+| `trimly-redis` | `redis:7-alpine` | `6379:6379` | Sub-15ms redirect caching, QR image cache, and Pub/Sub SSE channel |
 
-The default configuration in `src/main/resources/application.properties` works out of the box with the Docker setup:
+---
+
+### Step 3: Configuration (application.properties)
+
+The application configuration is pre-configured in `src/main/resources/application.properties` to connect to local Docker containers with zero manual editing required:
 
 ```properties
 server.port=4000
@@ -806,65 +834,133 @@ spring.data.redis.timeout=2000ms
 jwt.secret=9a3f5b7e2c8d1a4e6f0b3c5d7e9a1b3c5d7e9a1b3c5d7e9a1b3c5d7e9a1b3c5d
 jwt.expiration-ms=604800000
 
-# Automated Seeder Configuration
-seed.user.email=sk21@gmail.com
-seed.user.password=Trimly@341
-seed.user.name=Sandeep Kumar
+# Automated Seeder Configuration (Example test account credentials)
+seed.user.email=demo@trimly.com
+seed.user.password=DemoPassword@123
+seed.user.name=Demo User
 ```
 
-### Running the Backend
+*(Optional)* If you are running PostgreSQL or Redis on custom hostnames, ports, or credentials, update the corresponding `spring.datasource.*` or `spring.data.redis.*` properties or override them using environment variables.
 
-Start the Spring Boot backend using the Maven wrapper:
+---
+
+### Step 4: Build and Launch the Spring Boot Backend
+
+Start the backend application using the bundled Maven wrapper:
 
 ```bash
-# On Windows:
+# On Windows (PowerShell or CMD):
 .\mvnw.cmd spring-boot:run
 
-# On Linux / macOS:
+# On Linux or macOS:
 ./mvnw spring-boot:run
 ```
 
-Once initialized, the services are accessible at:
-- **Base REST API**: `http://localhost:4000/api`
-- **Actuator Health Probe**: `http://localhost:4000/actuator/health`
-- **Swagger UI Explorer**: `http://localhost:4000/swagger-ui.html`
-- **Live SSE Event Stream**: `http://localhost:4000/api/analytics/live`
+Alternative: Build a production executable JAR package:
 
-### Automated Database Seeder
+```bash
+# Package the standalone JAR (skipping test execution for rapid startup):
+.\mvnw.cmd clean package -DskipTests
 
-Trimly includes an automated database seeder that populates a complete, balanced dataset for testing (User Account, 4 Marketing Campaigns, 10 Custom Short Links, 6 Branded Vector QR Codes, and 142 Telemetry Click Events with realistic geographic and device distributions).
+# Run the compiled JAR directly with Java 25:
+java -jar target/trimly-backend-0.0.1-SNAPSHOT.jar
+```
 
-To seed the database:
+Once started, the Spring Boot application initializes on port `4000`:
+```text
+  :: Spring Boot ::                (v4.1.1)
 
-```cmd
-# Windows Batch:
+2026-09-23T00:15:06.910+05:30  INFO 26444 --- [trimly-backend] [restartedMain] c.trimly.api.TrimlyBackendApplication : Starting TrimlyBackendApplication using Java 25.0.2...
+2026-09-23T00:15:09.124+05:30  INFO 26444 --- [trimly-backend] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 4000 (http) with context path '/'
+2026-09-23T00:15:09.130+05:30  INFO 26444 --- [trimly-backend] [restartedMain] c.trimly.api.TrimlyBackendApplication : Started TrimlyBackendApplication in 2.341 seconds
+```
+
+---
+
+### Step 5: Seed Automated Dataset (Analytics, Links, QR Codes)
+
+Trimly includes an automated database seeder that creates a complete test environment: 1 primary test account, 4 multi-channel marketing campaigns, 10 custom short links, 6 customized vector QR codes, and 142 realistic click telemetry events across multiple countries, cities, browsers, and devices.
+
+To seed the database, run any of the following scripts from the repository root:
+
+```bash
+# Windows Batch (Command Prompt):
 seed.bat
 
 # Windows PowerShell:
 .\seed.ps1
 
-# Direct Maven Execution:
-.\mvnw.cmd spring-boot:run "-Dspring-boot.run.main-class=com.trimly.api.seeder.DatabaseSeederApplication"
+# Linux / macOS (Bash):
+chmod +x seed.sh && ./seed.sh
+
+# Direct Maven CLI Execution (Cross-Platform):
+./mvnw spring-boot:run "-Dspring-boot.run.main-class=com.trimly.api.seeder.DatabaseSeederApplication"
 ```
 
-Default seeded credentials:
-- **Email**: `sk21@gmail.com`
-- **Password**: `Trimly@341`
+Default seeded test credentials:
+- **Email**: `demo@trimly.com`
+- **Password**: `DemoPassword@123`
 
-### Running the Test Suite and Code Coverage
+---
 
-Execute the complete automated test suite including MockMvc web layer tests, utility unit tests, and E2E integration tests:
+### Step 6: Verify Service Health and OpenAPI Documentation
+
+Once the backend is running, verify that the health probes and interactive documentation are responsive:
+
+1. **Liveness & Readiness Health Probes**:
+   ```bash
+   # Spring Boot Actuator:
+   curl http://localhost:4000/actuator/health
+
+   # Comprehensive Health Probe (DB + Redis):
+   curl http://localhost:4000/api/health
+   ```
+   Expected response: `{"status":"UP","database":"CONNECTED","redis":"CONNECTED"}`
+
+2. **Interactive Swagger UI**:
+   Open [http://localhost:4000/swagger-ui.html](http://localhost:4000/swagger-ui.html) in your browser to inspect and test all endpoints interactively.
+
+3. **Real-Time SSE Stream**:
+   Inspect live event streaming at `http://localhost:4000/api/analytics/live`.
+
+---
+
+### Step 7: Run Automated Test Suite and Code Coverage
+
+Execute the complete test suite containing unit tests, repository validations, MockMvc security tests, and end-to-end integration workflows:
 
 ```bash
-# Run all tests:
+# Execute all automated tests:
 .\mvnw.cmd test
 
-# Generate JaCoCo code coverage reports:
+# Generate JaCoCo code coverage report:
 .\mvnw.cmd jacoco:report
 ```
 
-- **Test Suite Results**: 100% test pass rate across unit, repository, security, and MockMvc integration tests.
-- **Coverage Report Location**: `target/site/jacoco/index.html`
+- **Test Pass Rate**: 100% test pass rate across unit, repository, security, and MockMvc integration tests.
+- **Coverage Report Inspection**: Open `target/site/jacoco/index.html` in your web browser.
+
+---
+
+### Step 8: Connect with Frontend (Next.js)
+
+The Trimly Backend is architected to seamlessly pair with the Trimly Next.js Frontend:
+
+1. Clone and navigate to the frontend repository:
+   ```bash
+   git clone https://github.com/sandeep-kumar-21/trimly-frontend.git
+   cd trimly-frontend
+   ```
+2. Configure environment variable in `.env.local`:
+   ```properties
+   NEXT_PUBLIC_API_URL=http://localhost:4000
+   ```
+3. Install dependencies and start development server:
+   ```bash
+   npm install
+   npm run dev
+   ```
+4. Access the frontend dashboard at `http://localhost:3000` and sign in using `demo@trimly.com` / `DemoPassword@123`.
 
 ---
 
