@@ -21,9 +21,14 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/sandeep-kumar-21/trimly-frontend"><img src="https://img.shields.io/badge/Frontend%20Repo-Trimly%20Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Trimly Frontend Repository" /></a>
   <a href="https://www.linkedin.com/in/sandeep-kumar-s21"><img src="https://img.shields.io/badge/LinkedIn-Connect%20on%20LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
   <a href="mailto:sandeepkumarnitrr@gmail.com"><img src="https://img.shields.io/badge/Email-sandeepkumarnitrr%40gmail.com-EA4335?style=for-the-badge&logo=gmail&logoColor=white" alt="Email" /></a>
   <a href="https://github.com/sandeep-kumar-21"><img src="https://img.shields.io/badge/GitHub-View%20Profile-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub" /></a>
+</p>
+
+<p align="center">
+  Companion Frontend Web Application: <a href="https://github.com/sandeep-kumar-21/trimly-frontend"><strong>https://github.com/sandeep-kumar-21/trimly-frontend</strong></a>
 </p>
 
 ---
